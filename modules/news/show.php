@@ -89,10 +89,16 @@ $back_url = isset($_GET['from']) && $_GET['from'] == 'review' ? '../review/index
         <link href="../../node_modules/quill/dist/quill.snow.css" rel="stylesheet">
         <style>
             :root {
-                --color-brand-300: #93c5fd;
-                --color-brand-500: #2563eb;
-                --color-brand-600: #1d4ed8;
-                --color-brand-800: #1e3a8a;
+                --color-brand-50: #EEF5DB;
+                --color-brand-100: #E6EFCD;
+                --color-brand-200: #B8D8D8;
+                --color-brand-300: #9ABDBD;
+                --color-brand-400: #7A9E9F;
+                --color-brand-500: #4F6367;
+                --color-brand-600: #FE5F55;
+                --color-brand-700: #E35248;
+                --color-brand-800: #C2453D;
+                --color-brand-900: #A13832;
             }
             .news-content .ql-editor {
                 font-size: 1.1875rem; /* 19px for optimal reading */
