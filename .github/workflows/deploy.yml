@@ -1,4 +1,4 @@
-name: Auto Sync ke VPS
+name: workflow sync ke VPS
 
 on:
   push:
