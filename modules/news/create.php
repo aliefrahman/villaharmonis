@@ -3,6 +3,7 @@ require '../../config/db.php';
 require '../../includes/header.php';
 require '../../includes/sidebar.php';
 require '../../functions/upload.php';
+require '../../functions/security.php';
 
 if ($role !== 'kontributor' && $role !== 'admin') {
     header("Location: ../dashboard/index.php");
@@ -14,7 +15,8 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = trim($_POST['title']);
-    $content = trim($_POST['content']);
+    // 1. Cegah XSS: Bersihkan HTML menggunakan HTMLPurifier
+    $content = purify_html($_POST['content'] ?? '');
     $category_id = $_POST['category_id'];
     $image_caption = trim($_POST['image_caption'] ?? '');
 

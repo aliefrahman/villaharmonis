@@ -1,0 +1,31 @@
+# Disable directory browsing
+Options -Indexes
+
+# Prevent access to sensitive files and folders
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<DirectoryMatch "^\.|\/\.">
+    Require all denied
+</DirectoryMatch>
+
+<FilesMatch "^(package\.json|package-lock\.json|composer\.json|composer\.lock)$">
+    Require all denied
+</FilesMatch>
+
+# Protect config folder from direct access
+RewriteEngine On
+RewriteRule ^config/ - [F,L]
+RewriteRule ^functions/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+RewriteRule ^layout/ - [F,L]
+
+# Prevent sensitive file access
+<FilesMatch "\.(env|sql|md|log|ini|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Custom Error Pages
+ErrorDocument 403 /villaharmonis/403.php
+ErrorDocument 404 /villaharmonis/404.php

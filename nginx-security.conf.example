@@ -1,0 +1,42 @@
+# Tambahkan blok konfigurasi ini ke dalam block `server { ... }` pada file konfigurasi Nginx Anda
+# (Biasanya berada di /etc/nginx/sites-available/default atau /etc/nginx/conf.d/villaharmonis.conf)
+
+# 1. Mengarahkan Error 404 dan 403 ke file kustom
+error_page 403 /villaharmonis/403.php;
+error_page 404 /villaharmonis/404.php;
+
+# (Opsional) Jika Root Nginx Anda langsung mengarah ke folder villaharmonis, hapus awalan /villaharmonis/
+# error_page 403 /403.php;
+# error_page 404 /404.php;
+
+# 2. Blokir akses ke folder atau file yang diawali dengan titik (seperti .git, .env)
+location ~ /\. {
+    deny all;
+    access_log off;
+    log_not_found off;
+}
+
+# 3. Blokir file konfigurasi composer dan NPM
+location ~* (package\.json|package-lock\.json|composer\.json|composer\.lock)$ {
+    deny all;
+}
+
+# 4. Blokir file dengan ekstensi sensitif
+location ~* \.(env|sql|md|log|ini|sh)$ {
+    deny all;
+}
+
+# 5. Mencegah akses langsung ke folder internal (Hanya bisa di-include oleh PHP)
+# Sesuaikan path jika root Anda langsung ke folder villaharmonis (hapus /villaharmonis)
+location ^~ /villaharmonis/config/ {
+    deny all;
+}
+location ^~ /villaharmonis/functions/ {
+    deny all;
+}
+location ^~ /villaharmonis/includes/ {
+    deny all;
+}
+location ^~ /villaharmonis/layout/ {
+    deny all;
+}

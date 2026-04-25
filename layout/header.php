@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <?= isset($page_title) ? htmlspecialchars($page_title) : '#VHC - Dapatkan informasi yang viral dari warga. menyajikan informasi paling relevan untuk Anda setiap hari' ?>
+        <?= isset($page_title) ? htmlspecialchars($page_title) : '#VHC - Dapatkan informasi terkini dari warga. menyajikan informasi paling relevan untuk Anda setiap hari' ?>
     </title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -52,8 +52,7 @@
                     <?php else: ?>
                         <a href="modules/auth/login.php"
                             class="text-slate-700 hover:text-brand-600 font-medium transition">Login</a>
-                        <a href="modules/auth/register.php"
-                            class="bg-brand-600 text-white hover:bg-brand-700 px-4 py-2 rounded-lg font-medium transition shadow-sm hover:shadow">Daftar</a>
+
                     <?php endif; ?>
                 </div>
                 <!-- Mobile menu button -->

@@ -31,7 +31,7 @@ foreach ($news_list as $news) {
 
         </h1>
         <p class="mt-3 max-w-md mx-auto text-base text-slate-500 sm:text-md md:mt-5 md:text-xl md:max-w-3xl">
-            Dapatkan informasi yang viral dari warga. menyajikan informasi paling relevan untuk Anda setiap hari.
+            Dapatkan informasi terkini dari warga. menyajikan informasi paling relevan untuk Anda setiap hari.
         </p>
     </div>
 
