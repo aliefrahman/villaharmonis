@@ -1,4 +1,4 @@
-name: Deploy
+name: Auto Sync ke VPS
 
 on:
   push:
@@ -8,6 +8,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy
-        uses: appleboy/ssh-action@v1
+      - name: Sync ke VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/html/villaharmonis
+            git pull origin production
