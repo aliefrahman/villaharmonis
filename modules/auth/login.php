@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../../config/db.php';
+require '../../functions/auth_security.php';
 
 if (isset($_SESSION['user_id'])) {
     header("Location: ../dashboard/index.php");
@@ -8,22 +9,41 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error = '';
+$csrf_token = generate_csrf_token();
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    // 1. Verifikasi CSRF Token
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die("Invalid CSRF token! Permintaan ditolak.");
+    }
 
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['name'] = $user['name'];
-        header("Location: ../dashboard/index.php");
-        exit;
+    // 2. Cegah Brute Force / Rate Limiting
+    if (!check_login_attempts($_SERVER['REMOTE_ADDR'] ?? '')) {
+        $error = 'Terlalu banyak percobaan login. Silakan tunggu 5 menit.';
     } else {
-        $error = 'Email atau password salah!';
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // 3. Verifikasi Password Aman
+        if ($user && password_verify($password, $user['password'])) {
+            // 4. Mencegah Session Fixation
+            session_regenerate_id(true);
+
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['name'] = $user['name'];
+            
+            reset_login_attempts();
+            header("Location: ../dashboard/index.php");
+            exit;
+        } else {
+            record_failed_login();
+            $error = 'Email atau password salah!';
+        }
     }
 }
 ?>
@@ -79,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
             <div class="mb-5">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
                 <input type="email" name="email" required

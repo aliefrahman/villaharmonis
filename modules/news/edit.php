@@ -3,6 +3,7 @@ require '../../config/db.php';
 require '../../includes/header.php';
 require '../../includes/sidebar.php';
 require '../../functions/upload.php';
+require '../../functions/security.php';
 
 
 if ($role === 'user') {
@@ -15,7 +16,7 @@ if (!isset($_GET['id'])) {
 }
 $id = $_GET['id'];
 
-// Check ownership
+// 3. Mencegah IDOR: Check ownership secara ketat
 $stmt = $conn->prepare("SELECT * FROM news WHERE id=?");
 $stmt->execute([$id]);
 $news = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -26,6 +27,7 @@ if (!$news) {
 }
 
 if ($role === 'kontributor' && $news['author_id'] != $_SESSION['user_id']) {
+    // Akses ditolak jika bukan miliknya
     header("Location: index.php");
     exit;
 }
@@ -33,7 +35,8 @@ if ($role === 'kontributor' && $news['author_id'] != $_SESSION['user_id']) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = trim($_POST['title']);
-    $content = trim($_POST['content']);
+    // 1. Cegah XSS: Bersihkan HTML
+    $content = purify_html($_POST['content'] ?? '');
     $category_id = $_POST['category_id'];
     $image_caption = trim($_POST['image_caption'] ?? '');
     $status = isset($_POST['status']) ? $_POST['status'] : $news['status'];

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../../config/db.php';
+require '../../functions/auth_security.php';
 
 if (isset($_SESSION['user_id'])) {
     header("Location: ../dashboard/index.php");
@@ -9,27 +10,50 @@ if (isset($_SESSION['user_id'])) {
 
 $error = '';
 $success = '';
+$csrf_token = generate_csrf_token();
+$old_name = '';
+$old_email = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
+    // 1. Verifikasi CSRF Token
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die("Invalid CSRF token! Permintaan ditolak.");
+    }
 
-    if ($password !== $confirm_password) {
-        $error = "Password tidak cocok!";
+    // 2. Cegah Spam / Rate Limiting Pendaftaran
+    if (!check_login_attempts($_SERVER['REMOTE_ADDR'] ?? '')) {
+        $error = 'Terlalu banyak percobaan. Silakan tunggu 5 menit.';
     } else {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->rowCount() > 0) {
-            $error = "Email sudah terdaftar!";
+        $name = trim($_POST['name']);
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
+        
+        $old_name = $name;
+        $old_email = $email;
+
+        if ($password !== $confirm_password) {
+            $error = "Password tidak cocok!";
+            record_failed_login();
         } else {
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')");
-            if ($stmt->execute([$name, $email, $hashed_password])) {
-                $success = "Pendaftaran berhasil! Silakan login.";
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->rowCount() > 0) {
+                $error = "Email sudah terdaftar!";
+                record_failed_login();
             } else {
-                $error = "Terjadi kesalahan sistem.";
+                // 3. Password Hashing
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')");
+                if ($stmt->execute([$name, $email, $hashed_password])) {
+                    $success = "Pendaftaran berhasil! Silakan login.";
+                    reset_login_attempts();
+                    $old_name = '';
+                    $old_email = '';
+                } else {
+                    $error = "Terjadi kesalahan sistem.";
+                    record_failed_login();
+                }
             }
         }
     }
@@ -92,15 +116,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
             <div class="mb-4">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
-                <input type="text" name="name" required
+                <input type="text" name="name" value="<?= htmlspecialchars($old_name) ?>" required
                     class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                     placeholder="John Doe">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input type="email" name="email" required
+                <input type="email" name="email" value="<?= htmlspecialchars($old_email) ?>" required
                     class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
                     placeholder="email@contoh.com">
             </div>

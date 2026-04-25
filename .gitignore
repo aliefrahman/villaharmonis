@@ -1,5 +1,6 @@
 node_modules/
 config/db.php
+vendor/
 
 # OS generated files
 .DS_Store
